@@ -182,7 +182,7 @@ private void nextone(A_star2 object,char[][] map)
  */
 private void mark_way(A_star2 object,int x,int y)
 {
-	if (object.map[x][y]=='#'|| object.map[x][y]=='S')
+	if (object.map[x][y]=='#')
 	{
 	object.map[x][y]='H';
 	//print_map(object.map);
