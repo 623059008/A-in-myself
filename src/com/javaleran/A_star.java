@@ -14,6 +14,14 @@ public void begin(A_star object,char[][] map)
 {
 	object.map=map;
 	object.get_map_inf(object,object.map);
+	if (object.map[object.start[0]][object.start[1]]!='S')
+	{
+		System.err.println("地图不规范，没有起点S");return;
+	}
+	if (object.map[object.end[0]][object.end[1]]!='E')
+	{
+		System.err.println("地图不规范，没有终点E");return;
+	}
 	object.now[0]=object.start[0];
 	object.now[1]=object.start[1];
 	object.nextone(object, object.map);
@@ -49,7 +57,7 @@ public void print_map(char[][] map)
 	System.out.print("L");
 	s=s.substring(search+1,s.length());
 	}*/
-	System.out.print(s);
+	System.out.println(s);
 	System.out.println("----------------------------");
 }
 /*
@@ -73,34 +81,30 @@ private void nextone(A_star object,char[][] map)
 	catch(Exception e)
 	{
 		a1=-1;
-		System.out.println("There is an error0");
-		System.out.println((object.now[0]-1)+"   "+object.now[1]);
+		System.err.println("There is an error1");
 	}
 	try{a2=testisok(map[object.now[0]+1][object.now[1]]);}
 	catch(Exception e)
 	{
 		a2=-1;
-		System.out.println("There is an error1");
-		System.out.println((object.now[0]+1)+"   "+object.now[1]);
+		System.err.println("There is an error2");
 	}
 	try{a3=testisok(map[object.now[0]][object.now[1]-1]);}
 	catch(Exception e)
 	{
 		a3=-1;
-		System.out.println("There is an error2");
-		System.out.println(object.now[0]+"   "+(object.now[1]-1));
+		System.err.println("There is an error3");
 	}
 	try{a4=testisok(map[object.now[0]][object.now[1]+1]);}
 	catch(Exception e)
 	{
 		a4=-1;
-		System.out.println("There is an error3");
-		System.out.println(object.now[0]+"   "+(object.now[1]+1));
+		System.err.println("There is an error4");
 	}
 	if (a1==2 || a2==2 || a3==2 || a4==2)
 	{object.print_map(object.map);return;}
 	if (a1==-1 || a2==-1 || a3==-1 || a4==-1)
-	{System.out.println("error");return;}
+	{System.err.println("There is an error!");return;}
 	if (a1==1)
 	{
 		x1=predicted(object,object.now[0]-1,object.now[1]);
@@ -241,13 +245,13 @@ private void get_map_inf(A_star object,char[][] map){
 public static void main(String[] args) {
 		char[][] Xmap={
 				{'W','W','W','W','W','W','W','W','W','W'},
+				{'W','#','#','#','#','#','#','W','E','W'},
+				{'W','#','W','W','W','W','#','W','#','W'},
+				{'W','#','W','W','W','W','#','W','#','W'},
+				{'W','#','#','#','S','W','#','W','#','W'},
+				{'W','W','W','W','W','W','#','W','#','W'},
+				{'W','#','#','#','W','W','#','W','#','W'},
 				{'W','#','#','#','#','#','#','#','#','W'},
-				{'W','S','#','#','W','W','#','#','#','W'},
-				{'W','#','W','#','W','W','#','#','#','W'},
-				{'W','#','W','#','W','W','#','#','#','W'},
-				{'W','#','W','#','W','W','#','#','#','W'},
-				{'W','#','W','#','W','#','#','#','#','W'},
-				{'W','#','W','#','W','#','#','W','E','W'},
 				{'W','W','W','W','W','W','W','W','W','W'},
 		};
 	A_star one= new A_star();//初始化对象
