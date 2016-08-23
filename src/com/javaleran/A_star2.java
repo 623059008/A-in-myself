@@ -1,16 +1,24 @@
 package com.javaleran;
 
-public class A_star {
+public class A_star2 {
    private int[] start={0,0};//单起点
    private int[] end={0,0};//单终点
    private int[] now={0,0};//目前位置
-   private char[][] obstacle=new char[100][2];
+   private char[][] obstacle=new char[10000][2];
+   private int wall_sum=0;
+   private int way_sum=0;
+   private char[][] way=new char[10000][2];
    private char[][] map=new char[100][100];
+   private int[] restart={0,0};//最后的探索
   // private char[][] success=new char[100][100];
 /*
  * 开放接口	
  */
-public void begin(A_star object,char[][] map)
+
+/*
+ * 开始算法(探索起源)
+ */
+public void begin(A_star2 object,char[][] map)
 {
 	object.map=map;
 	object.get_map_inf(object,object.map);
@@ -26,7 +34,9 @@ public void begin(A_star object,char[][] map)
 	object.now[1]=object.start[1];
 	object.nextone(object, object.map);
 	}
-
+/*
+ * 打印地图(显示星图)
+ */
 public void print_map(char[][] map)
 {
 	String s = new String();
@@ -63,12 +73,16 @@ public void print_map(char[][] map)
 /*
  * 私有方法
  */
-
-
+private void rebegin(A_star2 object)
+{
+	object.now[0]=object.restart[0];
+	object.now[1]=object.restart[1];
+	object.nextone(object,object.map);
+	}
 /*
- * 寻求下一步的方法(试探未知)
+ * 寻求下一步的方法(迈向未知)
  */
-private void nextone(A_star object,char[][] map)
+private void nextone(A_star2 object,char[][] map)
 {
 	mark_way(object,object.now[0],object.now[1]);
 	long 
@@ -77,6 +91,7 @@ private void nextone(A_star object,char[][] map)
 		  x3=9223372036854775807L,
 		  x4=9223372036854775807L;
 	int a1,a2,a3,a4;
+	Boolean c1=false,c2=false,c3=false,c4=false;
 	try{a1=testisok(map[object.now[0]-1][object.now[1]]);}
 	catch(Exception e)
 	{
@@ -107,18 +122,22 @@ private void nextone(A_star object,char[][] map)
 	{System.err.println("There is an error!");return;}
 	if (a1==1)
 	{
+		c1=true;
 		x1=predicted(object,object.now[0]-1,object.now[1]);
 	}
 	if (a2==1)
 	{
+		c2=true;
 		x2=predicted(object,object.now[0]+1,object.now[1]);
 	}
 	if (a3==1)
 	{
+		c3=true;
 		x3=predicted(object,object.now[0],object.now[1]-1);
 	}
 	if (a4==1)
 	{
+		c4=true;
 		x4=predicted(object,object.now[0],object.now[1]+1);
 	}
 	long re=get_min(x1,x2,x3,x4);
@@ -126,6 +145,7 @@ private void nextone(A_star object,char[][] map)
 	//显示算法的选路过程
 	if (re<9223372036854775807L)
 	{
+		//移动
 	if (re==x1){object.now[0]=object.now[0]-1;object.now[1]=object.now[1];}
 	else{
 	if (re==x2){object.now[0]=object.now[0]+1;object.now[1]=object.now[1];}
@@ -139,21 +159,30 @@ private void nextone(A_star object,char[][] map)
 	}else{
 		if (object.now[0]==object.start[0] && object.now[1]==object.start[1])
 		{
+			//不到最后一刻不能妄下断言
+			if (get_map_way(object))
+			{
+				//重新探索之前走过的岔路口
+				rebegin(object);
+			}
+			else{
 			object.print_map(object.map);
 			System.out.println("该地图没有路径到达终点");
+			}
 			return;
 		}else{
+			//回到原点
 		object.now[0]=object.start[0];
 		object.now[1]=object.start[1];}
 	}
-	nextone(object,map);//递归
+	nextone(object,map);
 }
 /*
  * 标记走过的路(留下足迹)
  */
-private void mark_way(A_star object,int x,int y)
+private void mark_way(A_star2 object,int x,int y)
 {
-	if (object.map[x][y]=='#')
+	if (object.map[x][y]=='#'|| object.map[x][y]=='S')
 	{
 	object.map[x][y]='H';
 	//print_map(object.map);
@@ -163,13 +192,13 @@ private void mark_way(A_star object,int x,int y)
 /*
  *简单的预测方法(终点迫近)
  */
-private long predicted(A_star object,int a,int b)
+private long predicted(A_star2 object,int a,int b)
 {
 	long x=(object.end[0]-a)*(object.end[0]-a)+(object.end[1]-b)*(object.end[1]-b);
 	return x;
 	}
 /*
- * 在四个数字中取得最小值的方法(最优之数)
+ * 在四个数字中取得最小值的方法(最优之解)
  */
 private long get_min(long a,long b,long c,long d)
 {
@@ -188,7 +217,7 @@ private long get_min(long a,long b,long c,long d)
 	return a;
 	}
 /*
- * 判断目标是否可走的方法(读取信息)
+ * 判断目标是否可走的方法(数据换算)
  */
 private int testisok(char ch)
 {
@@ -204,18 +233,60 @@ private int testisok(char ch)
 	
 	}
 /*
- * 获取地图基本信息的方法
+ * 查找可行的区域(希望之光)
  */
-private void get_map_inf(A_star object,char[][] map){
+private boolean get_map_way(A_star2 object)
+{
+	object.way_sum=0;
+	object.restart[0]=0;
+	object.restart[1]=0;
+	for (int i=0;i<object.map.length;i++)
+	{
+		for (int j=0;j<object.map[i].length;j++)
+		{
+			if (object.map[i][j]=='#')
+			{
+				if (object.map[i-1][j]=='H')
+				{
+					object.restart[0]=i-1;
+					object.restart[1]=j;
+					return true;
+				}
+				if (object.map[i+1][j]=='H')
+				{
+					object.restart[0]=i+1;
+					object.restart[1]=j;
+					return true;
+				}
+				if (object.map[i][j-1]=='H')
+				{
+					object.restart[0]=i;
+					object.restart[1]=j-1;
+					return true;
+				}
+				if (object.map[i][j+1]=='H')
+				{
+					object.restart[0]=i;
+					object.restart[1]=j+1;
+					return true;
+				}
+			}
+		}
+		
+	}
+	return false;
+	}
+/*
+ * 获取地图基本信息的方法(未知开始)
+ */
+private void get_map_inf(A_star2 object,char[][] map){
 		for(int i=0;i<object.obstacle.length;i++)
 		{
 			for(int j=0;j<object.obstacle[i].length;j++)
 			{
 				object.obstacle[i][j]='#';
 			}
-		}
-		int w=0;
-		
+		}		
 		for (int i=0;i<map.length;i++)
 		{
 			for (int j=0;j<map[i].length;j++)
@@ -232,9 +303,9 @@ private void get_map_inf(A_star object,char[][] map){
 				}
 				if (map[i][j]=='W')
 				{
-					object.obstacle[w][0]=(char)(i+48);//这样可以把i转成对应的数字字符
-					object.obstacle[w][1]=(char)(j+48);
-					w++;
+					object.obstacle[object.wall_sum][0]=(char)(i+48);//这样可以把i转成对应的数字字符
+					object.obstacle[object.wall_sum][1]=(char)(j+48);
+					object.wall_sum++;
 				}
 				
 			}
@@ -254,7 +325,7 @@ public static void main(String[] args) {
 				{'W','S','#','#','#','#','#','#','#','W'},
 				{'W','W','W','W','W','W','W','W','W','W'},
 		};
-	A_star one= new A_star();//初始化对象
+	A_star2 one= new A_star2();//初始化对象
 	one.begin(one,Xmap);//启动算法！！！！
 	//one.print_map(map);//打印地图
 		
